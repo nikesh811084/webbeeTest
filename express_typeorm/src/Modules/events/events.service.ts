@@ -2,7 +2,6 @@ import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import App from "../../app";
 
-
 export class EventsService {
   private eventRepository: Repository<Event>;
 
@@ -92,7 +91,36 @@ export class EventsService {
      */
 
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    let result = await this.eventRepository.query(`SELECT e.id, e.name, e.createdAt, w.id as w_id, w.name as w_name, w.start, w.end, w.eventId, w.createdAt as w_createdAt
+    FROM event as e
+  LEFT JOIN 
+    workshop as w
+  WHERE w.end > date()`);
+
+  const filterByIdAndEventId = (resultSet: any) =>{
+    return resultSet.filter((obj: any) => {
+      if (obj.id === obj.eventId) {
+        obj.workshop = {
+          id: obj.w_id,
+          name: obj.w_name,
+          createdAt: obj.w_createdAt,
+          start: obj.start,
+          end: obj.end
+        };
+        delete obj.w_id;
+        delete obj.w_name;
+        delete obj.w_createdAt;
+        delete obj.start;
+        delete obj.end;
+        return true;
+      } else {
+        return false;
+      }
+    });
+  }
+  let newRes = filterByIdAndEventId(result)
+  console.log('############ RESULT ############## ', newRes)
+    // throw new Error('TODO task 1');
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
